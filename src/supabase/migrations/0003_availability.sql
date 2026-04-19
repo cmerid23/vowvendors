@@ -17,12 +17,14 @@ CREATE INDEX IF NOT EXISTS idx_vendor_availability_date   ON vendor_availability
 ALTER TABLE vendor_availability ENABLE ROW LEVEL SECURITY;
 
 -- Vendors can manage their own availability
+DROP POLICY IF EXISTS "vendor_availability_own" ON vendor_availability;
 CREATE POLICY "vendor_availability_own" ON vendor_availability
   FOR ALL
   USING (vendor_id = auth.uid())
   WITH CHECK (vendor_id = auth.uid());
 
 -- Anyone can read availability (for public profile + search filtering)
+DROP POLICY IF EXISTS "vendor_availability_public_read" ON vendor_availability;
 CREATE POLICY "vendor_availability_public_read" ON vendor_availability
   FOR SELECT
   USING (true);
