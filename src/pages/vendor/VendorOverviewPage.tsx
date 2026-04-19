@@ -8,13 +8,15 @@ import { formatRelativeTime } from '../../utils/formatters'
 
 export function VendorOverviewPage() {
   const profile = useAuthStore((s) => s.profile)
+  const authLoading = useAuthStore((s) => s.isLoading)
   const [vendor, setVendor] = useState<{ id: string; business_name: string; review_count: number; avg_rating: number } | null>(null)
   const [inquiries, setInquiries] = useState<ContactRequest[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!profile) return
+    if (authLoading) return
+    if (!profile) { setLoading(false); return }
     Promise.all([
       supabase.from('vendors').select('id, business_name, review_count, avg_rating').eq('user_id', profile.id).single(),
     ]).then(([v]) => {
@@ -30,7 +32,7 @@ export function VendorOverviewPage() {
       }
       setLoading(false)
     })
-  }, [profile])
+  }, [profile, authLoading])
 
   const stats = [
     { label: 'Total Inquiries', value: inquiries.length, icon: MessageSquare, color: 'text-brand' },
@@ -39,7 +41,7 @@ export function VendorOverviewPage() {
     { label: 'Avg Rating', value: vendor?.avg_rating ? vendor.avg_rating.toFixed(1) : '—', icon: Eye, color: 'text-amber-500' },
   ]
 
-  if (loading) return (
+  if (loading || authLoading) return (
     <div className="space-y-6">
       <div className="skeleton h-8 w-48 rounded" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

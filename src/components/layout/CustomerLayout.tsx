@@ -14,7 +14,7 @@ export function CustomerLayout() {
   const reset = useAuthStore((s) => s.reset)
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    try { await supabase.auth.signOut() } catch (_) { /* ignore network errors */ }
     reset()
     navigate('/')
   }
