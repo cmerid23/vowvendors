@@ -7,6 +7,12 @@ import { Button } from '../../components/ui/Button'
 import { US_STATES, SERVICE_CATEGORIES, PRICE_RANGES } from '../../utils/constants'
 import { WeddingDateFilter } from '../../features/availability/components/WeddingDateFilter'
 import { BudgetWidget } from '../../features/budget/components/BudgetWidget'
+import { SearchGate } from '../../features/search/components/SearchGate'
+import { ExitIntentModal } from '../../features/search/components/ExitIntentModal'
+import { useExitIntent } from '../../hooks/useExitIntent'
+import { useAuthStore } from '../../store/useAuthStore'
+
+const GUEST_PREVIEW_COUNT = 3
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -16,6 +22,12 @@ export function SearchPage() {
   const [weddingDate, setWeddingDate] = useState(searchParams.get('date') || '')
   const [page, setPage] = useState(0)
   const [showFilters, setShowFilters] = useState(false)
+  const [exitOpen, setExitOpen] = useState(false)
+
+  const { user } = useAuthStore()
+  const isGuest = !user
+
+  useExitIntent(() => setExitOpen(true), isGuest)
 
   const range = PRICE_RANGES[priceRange]
   const { vendors, loading, total, PAGE_SIZE } = useVendors({
@@ -144,26 +156,37 @@ export function SearchPage() {
             </div>
           ) : (
             <>
+              {/* Guest preview: show first N cards, gate the rest */}
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {vendors.map((vendor) => <VendorCard key={vendor.id} vendor={vendor} />)}
+                {(isGuest ? vendors.slice(0, GUEST_PREVIEW_COUNT) : vendors).map((vendor) => (
+                  <VendorCard key={vendor.id} vendor={vendor} />
+                ))}
               </div>
 
-              {/* Pagination */}
-              <div className="flex items-center justify-center gap-3 mt-10">
-                {page > 0 && (
-                  <Button variant="outline" onClick={() => setPage((p) => p - 1)}>Previous</Button>
-                )}
-                <span className="text-ink-400 font-body text-sm">
-                  Page {page + 1} of {Math.ceil(total / PAGE_SIZE)}
-                </span>
-                {(page + 1) * PAGE_SIZE < total && (
-                  <Button variant="outline" onClick={() => setPage((p) => p + 1)}>Next</Button>
-                )}
-              </div>
+              {isGuest && total > GUEST_PREVIEW_COUNT && (
+                <SearchGate total={total} shown={Math.min(vendors.length, GUEST_PREVIEW_COUNT)} />
+              )}
+
+              {/* Pagination — only for logged-in users */}
+              {!isGuest && (
+                <div className="flex items-center justify-center gap-3 mt-10">
+                  {page > 0 && (
+                    <Button variant="outline" onClick={() => setPage((p) => p - 1)}>Previous</Button>
+                  )}
+                  <span className="text-ink-400 font-body text-sm">
+                    Page {page + 1} of {Math.ceil(total / PAGE_SIZE)}
+                  </span>
+                  {(page + 1) * PAGE_SIZE < total && (
+                    <Button variant="outline" onClick={() => setPage((p) => p + 1)}>Next</Button>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
+
+      <ExitIntentModal open={exitOpen} onClose={() => setExitOpen(false)} />
     </div>
   )
 }
