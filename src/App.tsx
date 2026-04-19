@@ -10,6 +10,7 @@ import { VendorProfilePage } from './pages/public/VendorProfilePage'
 import { JoinPage } from './pages/public/JoinPage'
 import { AboutPage } from './pages/public/AboutPage'
 import { BudgetMatcherPage } from './pages/public/BudgetMatcherPage'
+import { StyleQuizPage } from './pages/public/StyleQuizPage'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { CustomerFavoritesPage } from './pages/customer/CustomerFavoritesPage'
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/join" element={<JoinPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/budget-matcher" element={<BudgetMatcherPage />} />
+          <Route path="/style-quiz" element={<StyleQuizPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, ArrowRight } from 'lucide-react'
+import { Search, ArrowRight, Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Button } from '../../components/ui/Button'
 import { LeadCaptureModal } from '../../components/lead/LeadCaptureModal'
@@ -73,8 +73,37 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Budget Widget */}
+      {/* Style Quiz CTA */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 -mt-6 pb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="bg-ink text-white rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-card-hover"
+        >
+          <div className="text-center sm:text-left">
+            <div className="inline-flex items-center gap-1.5 text-brand text-xs font-body font-semibold uppercase tracking-widest mb-1.5">
+              <Sparkles size={11} /> New · Style Quiz
+            </div>
+            <h2 className="font-display text-xl sm:text-2xl font-semibold leading-tight">
+              What's Your Wedding Style?
+            </h2>
+            <p className="font-body text-ink-300 text-sm mt-1">
+              8 questions → your style profile → matched vendors
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate('/style-quiz')}
+            size="lg"
+            className="shrink-0 justify-center whitespace-nowrap"
+          >
+            Take the Quiz <ArrowRight size={15} />
+          </Button>
+        </motion.div>
+      </section>
+
+      {/* Budget Widget */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-4">
         <div className="max-w-md mx-auto">
           <BudgetWidget />
         </div>
