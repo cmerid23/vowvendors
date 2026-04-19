@@ -1,31 +1,34 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/useAuthStore'
 import { useFavoritesStore } from '../store/useFavoritesStore'
 
 export function useAuthListener() {
-  const { setUser, setSession, setProfile, setLoading, reset } = useAuthStore()
+  const { setUser, setSession, setProfile, setLoading } = useAuthStore()
   const { loadFromDb, syncToDb } = useFavoritesStore()
+  const initialized = useRef(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-        setProfile(data)
-        loadFromDb(session.user.id)
-      }
-      setLoading(false)
-    })
+    // Prevent double-subscription when component re-mounts (StrictMode / layout transitions)
+    if (initialized.current) return
+    initialized.current = true
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+
+      // Silent background events — don't re-fetch profile or flash loading state
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'MFA_CHALLENGE_VERIFIED') {
+        return
+      }
+
+      if (event === 'SIGNED_OUT') {
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+
+      // INITIAL_SESSION, SIGNED_IN, PASSWORD_RECOVERY
       if (session?.user) {
         const { data } = await supabase
           .from('profiles')
@@ -40,9 +43,13 @@ export function useAuthListener() {
       } else {
         setProfile(null)
       }
+
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
-  }, [setUser, setSession, setProfile, setLoading, reset, loadFromDb, syncToDb])
+    return () => {
+      initialized.current = false
+      subscription.unsubscribe()
+    }
+  }, []) // stable refs — Zustand setters never change
 }

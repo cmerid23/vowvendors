@@ -19,10 +19,10 @@ export function VendorLayout() {
   const navigate = useNavigate()
   const reset = useAuthStore((s) => s.reset)
 
-  const handleSignOut = async () => {
-    try { await supabase.auth.signOut() } catch (_) { /* ignore network errors */ }
+  const handleSignOut = () => {
     reset()
     navigate('/')
+    supabase.auth.signOut().catch(() => {})
   }
 
   return (

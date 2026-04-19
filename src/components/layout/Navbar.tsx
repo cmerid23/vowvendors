@@ -10,11 +10,11 @@ export function Navbar() {
   const { user, profile, reset } = useAuthStore()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const handleSignOut = async () => {
-    try { await supabase.auth.signOut() } catch (_) { /* ignore network errors */ }
+  const handleSignOut = () => {
     reset()
     navigate('/')
     setMenuOpen(false)
+    supabase.auth.signOut().catch(() => {})
   }
 
   const dashLink = profile?.role === 'vendor' ? '/vendor/overview' : '/dashboard'
