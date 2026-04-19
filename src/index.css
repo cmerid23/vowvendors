@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+
+  html { font-family: 'Jost', system-ui, sans-serif; }
+
+  body {
+    @apply bg-surface text-ink m-0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-blush-50; }
+  ::-webkit-scrollbar-thumb { @apply bg-brand-200 rounded-full; }
+}
+
+@layer components {
+  .btn-gold {
+    @apply bg-brand text-white font-body font-medium px-5 py-2.5 rounded-pill
+      hover:bg-brand-500 transition-colors duration-200 text-sm inline-flex items-center gap-2;
+  }
+
+  .btn-outline {
+    @apply border border-brand text-brand font-body font-medium px-5 py-2.5 rounded-pill
+      hover:bg-brand/5 transition-colors duration-200 text-sm inline-flex items-center gap-2;
+  }
+
+  .btn-ghost {
+    @apply text-ink-400 font-body font-medium px-4 py-2 rounded-card
+      hover:text-ink hover:bg-ink-50 transition-colors duration-200 text-sm inline-flex items-center gap-2;
+  }
+
+  .card {
+    @apply bg-card rounded-card shadow-card border border-border;
+  }
+
+  .input-field {
+    @apply w-full bg-white text-ink font-body text-sm px-3 py-2.5 rounded-input
+      border border-border focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand
+      placeholder:text-ink-300 transition-all;
+  }
+
+  .input-error {
+    @apply border-red-400 focus:ring-red-200 focus:border-red-400;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-card text-sm font-body
+      text-ink-400 hover:text-ink hover:bg-blush-50 transition-colors cursor-pointer;
+  }
+
+  .sidebar-link-active {
+    @apply text-brand font-medium;
+    background-color: rgb(184 134 11 / 0.08);
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      theme('colors.ink.50') 25%,
+      theme('colors.blush.50') 50%,
+      theme('colors.ink.50') 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .badge-featured {
+    @apply bg-brand text-white text-xs font-body font-medium px-2.5 py-0.5 rounded-pill;
+  }
+
+  .badge-verified {
+    @apply bg-success/10 text-success text-xs font-body font-medium px-2.5 py-0.5 rounded-pill;
+  }
+
+  .badge-category {
+    @apply bg-blush-100 text-ink-500 text-xs font-body px-2.5 py-0.5 rounded-pill capitalize;
+  }
+}
+
+/* ── WedPose embedded scope ─────────────────────────────────── */
+.wedpose-embedded {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  min-height: calc(100vh - 140px);
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.wedpose-embedded .font-display {
+  font-family: 'Playfair Display', Georgia, serif !important;
+}
+
+.wedpose-embedded .font-body {
+  font-family: 'DM Sans', system-ui, sans-serif !important;
+}
+
+.wp-skeleton {
+  background: linear-gradient(
+    90deg,
+    theme('colors.charcoal.50') 25%,
+    theme('colors.charcoal.100') 50%,
+    theme('colors.charcoal.50') 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.wp-card-hover {
+  @apply transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-black/40;
+}
+
+.wp-btn-gold {
+  @apply bg-gold text-charcoal font-body font-medium px-4 py-2 rounded-lg
+    hover:bg-gold-200 transition-colors duration-200 text-sm;
+}
+
+.wp-btn-outline {
+  @apply border border-gold text-gold font-body font-medium px-4 py-2 rounded-lg
+    hover:bg-gold/10 transition-colors duration-200 text-sm;
+}
