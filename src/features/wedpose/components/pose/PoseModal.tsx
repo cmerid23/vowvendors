@@ -3,6 +3,7 @@ import type { PoseCard } from '../../types'
 import { HeartButton } from '../ui/HeartButton'
 import { useWedPoseStore } from '../../store/useWedPoseStore'
 import { getSubcategoryById } from '../../data/categories'
+import { X, Maximize2, ExternalLink, Link2 } from 'lucide-react'
 
 interface PoseModalProps {
   pose: PoseCard | null
@@ -14,10 +15,12 @@ interface PoseModalProps {
 export function PoseModal({ pose, relatedPoses, onClose, onSelectRelated }: PoseModalProps) {
   const addRecentlyViewed = useWedPoseStore((s) => s.addRecentlyViewed)
   const [fullscreen, setFullscreen] = useState(false)
+  const [imgLoaded, setImgLoaded] = useState(false)
 
   useEffect(() => {
     if (pose) {
       addRecentlyViewed(pose)
+      setImgLoaded(false)
       document.body.style.overflow = 'hidden'
     }
     return () => { document.body.style.overflow = '' }
@@ -41,50 +44,75 @@ export function PoseModal({ pose, relatedPoses, onClose, onSelectRelated }: Pose
     )
   }
 
+  // Fullscreen viewer — uses regular (not full) for mobile performance
   if (fullscreen) {
     return (
       <div
-        className="fixed inset-0 z-50 bg-black flex items-center justify-center cursor-zoom-out"
+        className="fixed inset-0 z-50 bg-black flex items-center justify-center"
         onClick={() => setFullscreen(false)}
       >
         <img
-          src={pose.photo.urls.full}
+          src={pose.photo.urls.regular}
           alt={pose.poseName}
-          className="max-h-screen max-w-full object-contain"
+          className="max-h-screen max-w-full object-contain select-none"
+          style={{ touchAction: 'pinch-zoom' }}
         />
         <button
-          className="absolute top-4 right-4 text-white bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
-          onClick={() => setFullscreen(false)}
-        >✕</button>
+          className="absolute top-4 right-4 text-white bg-black/70 rounded-full w-11 h-11 flex items-center justify-center"
+          onClick={(e) => { e.stopPropagation(); setFullscreen(false) }}
+          aria-label="Close fullscreen"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
     )
   }
 
   return (
     <div
-      className="fixed inset-0 z-40 bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+      className="fixed inset-0 z-40 bg-black/80 flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onClose}
     >
       <div
-        className="bg-charcoal-100 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-3xl max-h-[92vh] overflow-y-auto animate-slide-up"
+        className="bg-charcoal-100 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-3xl max-h-[95vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative">
+        {/* Image — object-contain so full photo is visible, no cropping */}
+        <div
+          className="relative bg-black rounded-t-2xl flex items-center justify-center"
+          style={{ minHeight: '40vw', maxHeight: '60vh' }}
+        >
+          {!imgLoaded && (
+            <div className="absolute inset-0 bg-charcoal-50 animate-pulse rounded-t-2xl" />
+          )}
           <img
             src={pose.photo.urls.regular}
             alt={pose.poseName}
-            className="w-full max-h-72 sm:max-h-96 object-cover rounded-t-2xl sm:rounded-t-2xl cursor-zoom-in"
-            onClick={() => setFullscreen(true)}
+            className={`w-full max-h-[60vh] object-contain rounded-t-2xl transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImgLoaded(true)}
           />
+
+          {/* Top controls */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm"
-          >✕</button>
-          <div className="absolute bottom-3 right-3">
+            className="absolute top-3 right-3 bg-black/70 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 touch-manipulation"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* Fullscreen button */}
+          <button
+            onClick={() => setFullscreen(true)}
+            className="absolute top-3 left-3 bg-black/70 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 touch-manipulation"
+            aria-label="Fullscreen"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
+
+          {/* Heart — bottom right */}
+          <div className="absolute bottom-3 right-3 z-10">
             <HeartButton pose={pose} />
-          </div>
-          <div className="absolute bottom-3 left-3 bg-black/60 text-cream text-xs px-2 py-1 rounded-full font-body">
-            Tap image to fullscreen
           </div>
         </div>
 
@@ -130,7 +158,7 @@ export function PoseModal({ pose, relatedPoses, onClose, onSelectRelated }: Pose
 
           <div className="flex gap-3 pt-1">
             <button onClick={handleCopyLink} className="wp-btn-outline flex-1 flex items-center justify-center gap-2">
-              <span>🔗</span> Copy Link
+              <Link2 className="w-3.5 h-3.5" /> Copy Link
             </button>
             <a
               href={pose.photo.links.html}
@@ -138,7 +166,7 @@ export function PoseModal({ pose, relatedPoses, onClose, onSelectRelated }: Pose
               rel="noopener noreferrer"
               className="wp-btn-outline flex-1 flex items-center justify-center gap-2 text-center"
             >
-              <span>↗</span> View on Unsplash
+              <ExternalLink className="w-3.5 h-3.5" /> Unsplash
             </a>
           </div>
 
@@ -155,9 +183,9 @@ export function PoseModal({ pose, relatedPoses, onClose, onSelectRelated }: Pose
               <h3 className="font-display text-gold text-sm uppercase tracking-wider mb-3">Related Poses</h3>
               <div className="grid grid-cols-3 gap-2">
                 {relatedPoses.slice(0, 3).map((related) => (
-                  <div
+                  <button
                     key={related.id}
-                    className="rounded-lg overflow-hidden cursor-pointer hover:ring-1 hover:ring-gold transition-all"
+                    className="rounded-lg overflow-hidden hover:ring-1 hover:ring-gold transition-all touch-manipulation"
                     onClick={() => onSelectRelated(related)}
                   >
                     <img
@@ -165,11 +193,17 @@ export function PoseModal({ pose, relatedPoses, onClose, onSelectRelated }: Pose
                       alt={related.poseName}
                       className="w-full aspect-square object-cover"
                     />
-                  </div>
+                    <p className="text-cream-400 text-[10px] font-body px-1 py-1 text-center truncate bg-charcoal-50">
+                      {related.poseName}
+                    </p>
+                  </button>
                 ))}
               </div>
             </div>
           )}
+
+          {/* Bottom safe-area padding for mobile */}
+          <div className="h-safe-area-bottom" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} />
         </div>
       </div>
     </div>
