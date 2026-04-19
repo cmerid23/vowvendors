@@ -67,9 +67,11 @@ export function WedPoseSettings() {
           >
             {saved ? '✓ Saved!' : 'Save API Key'}
           </button>
-          {unsplashApiKey && (
-            <p className="text-green-400 text-xs font-body">✓ API key is set</p>
-          )}
+          {unsplashApiKey ? (
+            <p className="text-green-400 text-xs font-body">✓ Custom API key is set</p>
+          ) : import.meta.env.VITE_UNSPLASH_ACCESS_KEY ? (
+            <p className="text-green-400 text-xs font-body">✓ Using app-wide API key</p>
+          ) : null}
         </div>
       </section>
 

@@ -16,7 +16,8 @@ export function useUnsplash(
   query: string,
   orientation: 'landscape' | 'portrait' | 'squarish' = 'portrait'
 ): UseUnsplashResult {
-  const apiKey = useWedPoseStore((s) => s.unsplashApiKey)
+  const storeKey = useWedPoseStore((s) => s.unsplashApiKey)
+  const apiKey = storeKey || import.meta.env.VITE_UNSPLASH_ACCESS_KEY || ''
   const [photos, setPhotos] = useState<UnsplashPhoto[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

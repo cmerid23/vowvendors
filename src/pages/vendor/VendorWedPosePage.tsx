@@ -24,11 +24,13 @@ function InspirationBoard() {
 
 export function VendorWedPosePage() {
   const profile = useAuthStore((s) => s.profile)
+  const authLoading = useAuthStore((s) => s.isLoading)
   const [vendorCategory, setVendorCategory] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!profile) return
+    if (authLoading) return
+    if (!profile) { setLoading(false); return }
     supabase
       .from('vendors')
       .select('category')
@@ -38,12 +40,15 @@ export function VendorWedPosePage() {
         setVendorCategory(data?.category ?? null)
         setLoading(false)
       })
-  }, [profile])
+  }, [profile, authLoading])
 
-  if (loading) return <div className="skeleton h-64 rounded-card" />
+  if (loading || authLoading) return <div className="skeleton h-64 rounded-card" />
 
-  const isPhotoVideo = vendorCategory === 'photographer' || vendorCategory === 'videographer'
-  if (!isPhotoVideo) return <InspirationBoard />
+  // Only restrict if category is explicitly set to a non-photo/video category
+  const isRestricted = vendorCategory !== null &&
+    vendorCategory !== 'photographer' &&
+    vendorCategory !== 'videographer'
+  if (isRestricted) return <InspirationBoard />
 
   return (
     <div className="wedpose-embedded">

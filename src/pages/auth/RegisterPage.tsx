@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,6 +11,7 @@ export function RegisterPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const defaultRole = (searchParams.get('role') || 'customer') as 'customer' | 'vendor'
+  const [emailPending, setEmailPending] = useState(false)
 
   const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -17,7 +19,7 @@ export function RegisterPage() {
   })
 
   const onSubmit = async (data: RegisterFormData) => {
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -26,11 +28,16 @@ export function RegisterPage() {
     })
     if (error) { setError('root', { message: error.message }); return }
 
-    // Insert profile row
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
+    // Email confirmation required — no session yet
+    if (signUpData.user && !signUpData.session) {
+      setEmailPending(true)
+      return
+    }
+
+    // No email confirmation — session available immediately
+    if (signUpData.user) {
       await supabase.from('profiles').upsert({
-        id: user.id,
+        id: signUpData.user.id,
         email: data.email,
         full_name: data.full_name,
         role: data.role,
@@ -38,6 +45,23 @@ export function RegisterPage() {
     }
 
     navigate(data.role === 'vendor' ? '/vendor/overview' : '/dashboard')
+  }
+
+  if (emailPending) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm text-center">
+          <div className="text-5xl mb-4">📧</div>
+          <h1 className="font-display text-2xl text-ink font-semibold mb-2">Check your email</h1>
+          <p className="text-ink-400 font-body text-sm mb-6 leading-relaxed">
+            We sent a confirmation link to your email. Click it to activate your account and log in.
+          </p>
+          <Link to="/login" className="text-brand hover:underline font-body text-sm font-medium">
+            Go to login →
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
