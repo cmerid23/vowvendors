@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '../../components/ui/Button'
 import { LeadCaptureModal } from '../../components/lead/LeadCaptureModal'
 import { US_STATES, SERVICE_CATEGORIES } from '../../utils/constants'
+import { BudgetWidget } from '../../features/budget/components/BudgetWidget'
 
 const TESTIMONIALS = [
   { name: 'Sarah & James', state: 'California', text: 'Found our photographer in 10 minutes. The portfolio quality on VowVendors is incredible.' },
@@ -69,6 +70,13 @@ export function HomePage() {
               <Search size={16} /> Search
             </Button>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Budget Widget */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 -mt-6 pb-4">
+        <div className="max-w-md mx-auto">
+          <BudgetWidget />
         </div>
       </section>
 

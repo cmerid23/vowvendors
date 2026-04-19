@@ -8,6 +8,7 @@ interface UseVendorsOptions {
   minPrice?: number
   maxPrice?: number
   page?: number
+  weddingDate?: string
 }
 
 export function useVendors(options: UseVendorsOptions = {}) {
@@ -33,6 +34,16 @@ export function useVendors(options: UseVendorsOptions = {}) {
       if (options.minPrice) query = query.gte('starting_price', options.minPrice)
       if (options.maxPrice && options.maxPrice !== Infinity) query = query.lte('starting_price', options.maxPrice)
 
+      if (options.weddingDate) {
+        const { data: unavail } = await supabase
+          .from('vendor_availability')
+          .select('vendor_id')
+          .eq('date', options.weddingDate)
+          .in('status', ['booked', 'tentative'])
+        const excludeIds = (unavail || []).map((r: { vendor_id: string }) => r.vendor_id)
+        if (excludeIds.length > 0) query = query.not('id', 'in', `(${excludeIds.join(',')})`)
+      }
+
       const page = options.page ?? 0
       query = query.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
 
@@ -45,7 +56,7 @@ export function useVendors(options: UseVendorsOptions = {}) {
     } finally {
       setLoading(false)
     }
-  }, [options.category, options.state, options.minPrice, options.maxPrice, options.page])
+  }, [options.category, options.state, options.minPrice, options.maxPrice, options.page, options.weddingDate])
 
   useEffect(() => { fetch() }, [fetch])
 

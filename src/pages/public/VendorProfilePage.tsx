@@ -1,21 +1,46 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { MapPin, Globe, Link2, Phone, DollarSign, ArrowLeft, Heart } from 'lucide-react'
 import { useVendorProfile } from '../../hooks/useVendorProfile'
 import { VerificationGate } from '../../features/verification/components/VerificationGate'
 import { VendorVerifiedBanner } from '../../features/verification/components/VendorVerifiedBanner'
+import { MiniCalendar } from '../../features/availability/components/MiniCalendar'
+import { UnavailableBanner } from '../../features/availability/components/UnavailableBanner'
+import { AvailabilityBadge } from '../../features/availability/components/AvailabilityBadge'
 import { StarRating, FeaturedBadge, VerifiedBadge, CategoryBadge, Skeleton } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { useFavoritesStore } from '../../store/useFavoritesStore'
 import { formatPrice, formatDate } from '../../utils/formatters'
+import { supabase } from '../../lib/supabase'
+import type { DateEntry, DateStatus } from '../../types/availability'
 
 export function VendorProfilePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { vendor, portfolio, reviews, loading, error } = useVendorProfile(id)
   const isFavorite = useFavoritesStore((s) => s.isFavorite)
   const toggle = useFavoritesStore((s) => s.toggle)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
+  const [availability, setAvailability] = useState<Record<string, DateEntry>>({})
+  const weddingDate = searchParams.get('date') || ''
+
+  useEffect(() => {
+    if (!id) return
+    supabase
+      .from('vendor_availability')
+      .select('date, status')
+      .eq('vendor_id', id)
+      .then(({ data }) => {
+        if (data) {
+          const entries: Record<string, DateEntry> = {}
+          data.forEach((r: { date: string; status: DateStatus }) => {
+            entries[r.date] = { status: r.status }
+          })
+          setAvailability(entries)
+        }
+      })
+  }, [id])
 
   if (loading) return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
@@ -139,8 +164,18 @@ export function VendorProfilePage() {
           )}
         </div>
 
-        {/* Right — contact form */}
+        {/* Right — availability + contact */}
         <div className="lg:sticky lg:top-24 h-fit space-y-4">
+          {weddingDate && availability[weddingDate] && (
+            <UnavailableBanner weddingDate={weddingDate} entry={availability[weddingDate]} />
+          )}
+          <div className="card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-text">Availability</p>
+              <AvailabilityBadge entries={availability} weddingDate={weddingDate || undefined} />
+            </div>
+            <MiniCalendar entries={availability} highlightedDates={weddingDate ? [weddingDate] : []} />
+          </div>
           <VendorVerifiedBanner />
           <VerificationGate vendorId={vendor.id} vendorName={vendor.business_name} />
         </div>

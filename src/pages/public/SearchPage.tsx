@@ -5,12 +5,15 @@ import { useVendors } from '../../hooks/useVendors'
 import { VendorCard, VendorCardSkeleton } from '../../components/vendor/VendorCard'
 import { Button } from '../../components/ui/Button'
 import { US_STATES, SERVICE_CATEGORIES, PRICE_RANGES } from '../../utils/constants'
+import { WeddingDateFilter } from '../../features/availability/components/WeddingDateFilter'
+import { BudgetWidget } from '../../features/budget/components/BudgetWidget'
 
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [category, setCategory] = useState(searchParams.get('category') || '')
   const [state, setState] = useState(searchParams.get('state') || '')
   const [priceRange, setPriceRange] = useState(0)
+  const [weddingDate, setWeddingDate] = useState(searchParams.get('date') || '')
   const [page, setPage] = useState(0)
   const [showFilters, setShowFilters] = useState(false)
 
@@ -19,6 +22,7 @@ export function SearchPage() {
     category, state,
     minPrice: range.min || undefined,
     maxPrice: range.max === Infinity ? undefined : range.max,
+    weddingDate: weddingDate || undefined,
     page,
   })
 
@@ -26,9 +30,10 @@ export function SearchPage() {
     const params: Record<string, string> = {}
     if (category) params.category = category
     if (state) params.state = state
+    if (weddingDate) params.date = weddingDate
     setSearchParams(params, { replace: true })
     setPage(0)
-  }, [category, state, priceRange])
+  }, [category, state, priceRange, weddingDate])
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
@@ -85,6 +90,18 @@ export function SearchPage() {
           </div>
 
           <div>
+            <p className="font-body font-medium text-sm text-ink mb-2">Wedding Date</p>
+            <WeddingDateFilter
+              value={weddingDate}
+              onChange={(d) => { setWeddingDate(d); setPage(0) }}
+              onClear={() => { setWeddingDate(''); setPage(0) }}
+            />
+            {weddingDate && (
+              <p className="text-xs text-text-secondary mt-1">Showing vendors available on this date</p>
+            )}
+          </div>
+
+          <div>
             <p className="font-body font-medium text-sm text-ink mb-2">Starting price</p>
             <div className="space-y-1">
               {PRICE_RANGES.map((r, i) => (
@@ -99,9 +116,13 @@ export function SearchPage() {
             </div>
           </div>
 
-          {(category || state || priceRange > 0) && (
+          <div className="pt-2">
+            <BudgetWidget />
+          </div>
+
+          {(category || state || priceRange > 0 || weddingDate) && (
             <button
-              onClick={() => { setCategory(''); setState(''); setPriceRange(0) }}
+              onClick={() => { setCategory(''); setState(''); setPriceRange(0); setWeddingDate('') }}
               className="text-xs text-red-400 hover:text-red-600 font-body"
             >
               Clear all filters

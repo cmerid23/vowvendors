@@ -4,11 +4,22 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
 import type { ContactRequest } from '../../types/database'
 import { formatDate, formatRelativeTime } from '../../utils/formatters'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, Sparkles } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { LeadVerifiedBadge } from '../../features/verification/components/LeadVerifiedBadge'
 import { VerificationStats } from '../../features/verification/components/VerificationStats'
 import { getLevel } from '../../features/verification/verificationScore'
+
+interface BudgetLead {
+  id: string
+  name: string
+  email: string
+  state: string | null
+  event_date: string | null
+  message: string | null
+  service_interest: string[] | null
+  created_at: string
+}
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
@@ -23,6 +34,7 @@ export function VendorInquiriesPage() {
   const [vendorId, setVendorId] = useState<string | null>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [inquiries, setInquiries] = useState<(ContactRequest & { verification_score?: number })[]>([])
+  const [budgetLeads, setBudgetLeads] = useState<BudgetLead[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,12 +42,24 @@ export function VendorInquiriesPage() {
     supabase.from('vendors').select('id').eq('user_id', profile.id).single().then(({ data: v }) => {
       if (!v) { setLoading(false); return }
       setVendorId(v.id)
-      supabase
-        .from('contact_requests')
-        .select('*')
-        .eq('vendor_id', v.id)
-        .order('created_at', { ascending: false })
-        .then(({ data }) => { setInquiries((data as any) || []); setLoading(false) })
+      Promise.all([
+        supabase
+          .from('contact_requests')
+          .select('*')
+          .eq('vendor_id', v.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('leads')
+          .select('id, name, email, state, event_date, message, service_interest, created_at')
+          .eq('vendor_id', v.id)
+          .eq('source', 'budget-matcher')
+          .order('created_at', { ascending: false }),
+      ]).then(([inq, leads]) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setInquiries((inq.data as any) || [])
+        setBudgetLeads((leads.data as BudgetLead[]) || [])
+        setLoading(false)
+      })
     })
   }, [profile])
 
@@ -51,6 +75,40 @@ export function VendorInquiriesPage() {
       <h1 className="font-display text-3xl text-ink font-semibold mb-6">Inquiries</h1>
 
       {vendorId && <div className="mb-6"><VerificationStats vendorId={vendorId} /></div>}
+
+      {budgetLeads.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-brand" />
+            <h2 className="font-semibold text-text">Budget Matched Leads</h2>
+            <span className="bg-brand text-white text-xs font-bold px-2 py-0.5 rounded-full">{budgetLeads.length}</span>
+          </div>
+          <div className="space-y-3">
+            {budgetLeads.map((lead) => (
+              <div key={lead.id} className="card p-4 border-brand/20 bg-brand/5">
+                <div className="flex items-start justify-between gap-3 mb-1">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-text text-sm">{lead.email}</p>
+                      <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-brand/10 text-brand text-[10px] font-bold">
+                        <Sparkles className="w-3 h-3" /> Budget Matched
+                      </span>
+                    </div>
+                    {lead.state && <p className="text-xs text-text-secondary">{lead.state}</p>}
+                  </div>
+                  <span className="text-xs text-text-secondary shrink-0">{formatRelativeTime(lead.created_at)}</span>
+                </div>
+                {lead.event_date && (
+                  <p className="text-xs text-brand">Event: {formatDate(lead.event_date)}</p>
+                )}
+                {lead.message && (
+                  <p className="text-xs text-text-secondary mt-1 line-clamp-2">{lead.message}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {inquiries.length === 0 ? (
         <div className="text-center py-16 text-ink-400 font-body">

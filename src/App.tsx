@@ -9,6 +9,7 @@ import { SearchPage } from './pages/public/SearchPage'
 import { VendorProfilePage } from './pages/public/VendorProfilePage'
 import { JoinPage } from './pages/public/JoinPage'
 import { AboutPage } from './pages/public/AboutPage'
+import { BudgetMatcherPage } from './pages/public/BudgetMatcherPage'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { CustomerFavoritesPage } from './pages/customer/CustomerFavoritesPage'
@@ -21,6 +22,7 @@ import { VendorInquiriesPage } from './pages/vendor/VendorInquiriesPage'
 import { VendorChatPage } from './pages/vendor/VendorChatPage'
 import { VendorWedPosePage } from './pages/vendor/VendorWedPosePage'
 import { VendorSettingsPage } from './pages/vendor/VendorSettingsPage'
+import VendorAvailabilityPage from './pages/vendor/VendorAvailabilityPage'
 
 export default function App() {
   return (
@@ -32,6 +34,7 @@ export default function App() {
           <Route path="/vendors/:id" element={<VendorProfilePage />} />
           <Route path="/join" element={<JoinPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/budget-matcher" element={<BudgetMatcherPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>
@@ -52,6 +55,7 @@ export default function App() {
             <Route path="/vendor/inquiries" element={<VendorInquiriesPage />} />
             <Route path="/vendor/chat/:conversationId" element={<VendorChatPage />} />
             <Route path="/vendor/wedpose/*" element={<VendorWedPosePage />} />
+            <Route path="/vendor/availability" element={<VendorAvailabilityPage />} />
             <Route path="/vendor/settings" element={<VendorSettingsPage />} />
           </Route>
         </Route>
