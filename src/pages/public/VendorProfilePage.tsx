@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { MapPin, Globe, Link2, Phone, DollarSign, ArrowLeft, Heart } from 'lucide-react'
 import { useVendorProfile } from '../../hooks/useVendorProfile'
-import { ContactForm } from '../../components/lead/ContactForm'
+import { VerificationGate } from '../../features/verification/components/VerificationGate'
+import { VendorVerifiedBanner } from '../../features/verification/components/VendorVerifiedBanner'
 import { StarRating, FeaturedBadge, VerifiedBadge, CategoryBadge, Skeleton } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { useFavoritesStore } from '../../store/useFavoritesStore'
@@ -139,8 +140,9 @@ export function VendorProfilePage() {
         </div>
 
         {/* Right — contact form */}
-        <div className="lg:sticky lg:top-24 h-fit">
-          <ContactForm vendorId={vendor.id} vendorName={vendor.business_name} />
+        <div className="lg:sticky lg:top-24 h-fit space-y-4">
+          <VendorVerifiedBanner />
+          <VerificationGate vendorId={vendor.id} vendorName={vendor.business_name} />
         </div>
       </div>
 
