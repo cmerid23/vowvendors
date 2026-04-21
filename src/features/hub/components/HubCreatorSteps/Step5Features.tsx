@@ -9,8 +9,11 @@ interface Props {
 const TOGGLES: Array<{ key: keyof CreateHubData; label: string; desc: string }> = [
   { key: 'show_timeline', label: 'View timeline', desc: 'Guests can see the day schedule' },
   { key: 'show_photo_wall', label: 'Upload & view photos', desc: 'Live guest photo wall with real-time uploads' },
+  { key: 'show_travel', label: 'Travel & hotels', desc: 'Airport, transport, and hotel recommendations' },
+  { key: 'show_things_to_do', label: 'Things to do', desc: 'Local activity suggestions for out-of-town guests' },
   { key: 'show_seating', label: 'Browse seating chart', desc: 'Guests can find their table' },
   { key: 'show_song_requests', label: 'Request songs', desc: 'Guests vote for songs for the DJ' },
+  { key: 'show_faq', label: 'FAQ', desc: 'Answers to common guest questions' },
   { key: 'show_vendors', label: 'Discover vendors', desc: 'Guests can follow your vendors' },
 ]
 

@@ -8,10 +8,22 @@ import { Step2CoverPhoto } from '../components/HubCreatorSteps/Step2CoverPhoto'
 import { Step3Timeline } from '../components/HubCreatorSteps/Step3Timeline'
 import { Step4Vendors } from '../components/HubCreatorSteps/Step4Vendors'
 import { Step5Features } from '../components/HubCreatorSteps/Step5Features'
+import { Step6Travel } from '../components/HubCreatorSteps/Step6Travel'
+import { Step7ThingsToDo } from '../components/HubCreatorSteps/Step7ThingsToDo'
+import { Step8FAQ } from '../components/HubCreatorSteps/Step8FAQ'
 import { HubQRCode } from '../components/HubQRCode'
-import type { CreateHubData, CreateTimelineEvent, CreateHubVendor, WeddingHub } from '../../../types/hub'
+import type {
+  CreateHubData,
+  CreateTimelineEvent,
+  CreateHubVendor,
+  WeddingHub,
+  HubTravel,
+  HubHotel,
+  HubThingToDo,
+  HubFaqItem,
+} from '../../../types/hub'
 
-const STEPS = ['Your Wedding', 'Cover Photo', 'Timeline', 'Vendors', 'Features']
+const STEPS = ['Your Wedding', 'Cover Photo', 'Timeline', 'Vendors', 'Features', 'Travel', 'Things To Do', 'FAQ']
 
 const DEFAULT_DATA: Partial<CreateHubData> = {
   theme: 'romantic',
@@ -21,17 +33,28 @@ const DEFAULT_DATA: Partial<CreateHubData> = {
   show_seating: false,
   show_song_requests: false,
   show_vendors: true,
+  show_travel: true,
+  show_things_to_do: true,
+  show_faq: true,
 }
 
 export function HubCreator() {
   const user = useAuthStore((s) => s.user)
-  const { createHub, addTimelineEvent, addVendor, isCreating } = useHubStore()
+  const {
+    createHub, addTimelineEvent, addVendor, isCreating,
+    saveTravel, addHotel, addThingToDo, addFaqItem,
+    generateAISuggestions, aiSuggestions, isLoadingAISuggestions,
+  } = useHubStore()
   const navigate = useNavigate()
 
   const [step, setStep] = useState(0)
   const [formData, setFormData] = useState<Partial<CreateHubData>>(DEFAULT_DATA)
   const [timelineEvents, setTimelineEvents] = useState<CreateTimelineEvent[]>([])
   const [vendors, setVendors] = useState<CreateHubVendor[]>([])
+  const [travelData, setTravelData] = useState<Partial<HubTravel>>({})
+  const [hotelDrafts, setHotelDrafts] = useState<Omit<HubHotel, 'id' | 'hub_id' | 'display_order'>[]>([])
+  const [activityDrafts, setActivityDrafts] = useState<Omit<HubThingToDo, 'id' | 'hub_id' | 'display_order'>[]>([])
+  const [faqDrafts, setFaqDrafts] = useState<Omit<HubFaqItem, 'id' | 'hub_id' | 'display_order'>[]>([])
   const [createdHub, setCreatedHub] = useState<WeddingHub | null>(null)
   const [error, setError] = useState('')
 
@@ -48,6 +71,11 @@ export function HubCreator() {
 
   const back = () => setStep((s) => Math.max(s - 1, 0))
 
+  const handleAISuggest = async () => {
+    if (!formData.venue_city || !formData.venue_state) return
+    await generateAISuggestions(formData.venue_city, formData.venue_state, formData.wedding_date || '')
+  }
+
   const finish = async () => {
     if (!user) return
     setError('')
@@ -57,14 +85,29 @@ export function HubCreator() {
         created_by: user.id,
         couple_id: user.id,
       })
-      // Add timeline events
+
+      // Save all data in parallel where possible
+      const saves: Promise<unknown>[] = []
+
       for (let i = 0; i < timelineEvents.length; i++) {
-        await addTimelineEvent(hub.id, { ...timelineEvents[i], display_order: i })
+        saves.push(addTimelineEvent(hub.id, { ...timelineEvents[i], display_order: i }))
       }
-      // Add vendors
       for (const v of vendors) {
-        await addVendor(hub.id, v)
+        saves.push(addVendor(hub.id, v))
       }
+
+      // Travel
+      const hasTravelData = Object.values(travelData).some((v) => v)
+      if (hasTravelData) saves.push(saveTravel(hub.id, travelData))
+      for (const h of hotelDrafts) saves.push(addHotel(hub.id, h))
+
+      // Things to do
+      for (const a of activityDrafts) saves.push(addThingToDo(hub.id, a))
+
+      // FAQ
+      for (const f of faqDrafts) saves.push(addFaqItem(hub.id, f))
+
+      await Promise.all(saves)
       setCreatedHub(hub)
     } catch (e) {
       setError((e as Error).message)
@@ -128,12 +171,12 @@ export function HubCreator() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="font-display text-2xl font-semibold text-ink">Create Wedding Hub</h1>
-        <p className="font-body text-sm text-ink-400 mt-1">Set up your guests&apos; wedding day experience in 5 minutes.</p>
+        <p className="font-body text-sm text-ink-400 mt-1">Set up your guests&apos; wedding day experience in minutes.</p>
       </div>
 
       {/* Progress */}
       <div className="mb-6">
-        <div className="flex items-center gap-1 mb-2">
+        <div className="flex items-center gap-0.5 mb-2">
           {STEPS.map((_, i) => (
             <div
               key={i}
@@ -153,6 +196,32 @@ export function HubCreator() {
         {step === 2 && <Step3Timeline events={timelineEvents} onChange={setTimelineEvents} />}
         {step === 3 && <Step4Vendors vendors={vendors} onChange={setVendors} />}
         {step === 4 && <Step5Features data={formData} onChange={setFormData} />}
+        {step === 5 && (
+          <Step6Travel
+            travel={travelData}
+            hotels={hotelDrafts}
+            venueAddress={formData.venue_address}
+            onTravelChange={setTravelData}
+            onHotelsChange={setHotelDrafts}
+          />
+        )}
+        {step === 6 && (
+          <Step7ThingsToDo
+            items={activityDrafts}
+            onChange={setActivityDrafts}
+            onAISuggest={handleAISuggest}
+            aiSuggestions={aiSuggestions}
+            isLoadingAI={isLoadingAISuggestions}
+            city={formData.venue_city}
+            state={formData.venue_state}
+          />
+        )}
+        {step === 7 && (
+          <Step8FAQ
+            items={faqDrafts}
+            onChange={setFaqDrafts}
+          />
+        )}
       </div>
 
       {error && (
@@ -180,7 +249,7 @@ export function HubCreator() {
             className="btn-primary flex items-center gap-1.5 disabled:opacity-60"
           >
             {isCreating ? 'Creating…' : (
-              <><CheckCircle size={16} /> Generate My Hub</>
+              <><CheckCircle size={16} /> Finish — View My Hub</>
             )}
           </button>
         )}

@@ -19,9 +19,12 @@ export function HubNav({ hub, activeSection, onNavigate }: Props) {
 
   const items: NavItem[] = [
     ...(hub.show_timeline ? [{ id: 'timeline', emoji: '📅', label: 'Timeline' }] : []),
+    ...(hub.show_travel ? [{ id: 'travel', emoji: '✈️', label: 'Travel' }] : []),
+    ...(hub.show_things_to_do ? [{ id: 'things-to-do', emoji: '📍', label: 'Things To Do' }] : []),
     ...(hub.show_photo_wall ? [{ id: 'photos', emoji: '📸', label: 'Photos' }] : []),
     ...(hub.show_seating ? [{ id: 'seating', emoji: '🪑', label: 'Seats' }] : []),
     ...(hub.show_song_requests ? [{ id: 'songs', emoji: '🎵', label: 'Songs' }] : []),
+    ...(hub.show_faq ? [{ id: 'faq', emoji: '❓', label: 'FAQ' }] : []),
     ...(hub.show_vendors ? [{ id: 'vendors', emoji: '💛', label: 'Vendors' }] : []),
   ]
 

@@ -8,11 +8,17 @@ import type {
   HubSongRequest,
   HubSeatingTable,
   HubAnalytics,
+  HubTravel,
+  HubHotel,
+  HubThingToDo,
+  HubFaqItem,
   CreateHubData,
   CreateTimelineEvent,
   CreateHubVendor,
   CreateSongRequest,
+  ThingsToDoSuggestion,
 } from '../types/hub'
+import { suggestThingsToDo } from '../features/hub/lib/suggestThingsToDo'
 
 interface HubState {
   hub: WeddingHub | null
@@ -54,6 +60,33 @@ interface HubState {
 
   generateAccessCode: (partnerOne: string, partnerTwo: string, year: number) => string
   trackScan: (hubId: string, sessionId: string) => Promise<void>
+
+  // Travel
+  travel: HubTravel | null
+  hotels: HubHotel[]
+  loadTravel: (hubId: string) => Promise<void>
+  saveTravel: (hubId: string, data: Partial<HubTravel>) => Promise<void>
+  addHotel: (hubId: string, hotel: Omit<HubHotel, 'id' | 'hub_id' | 'display_order'>) => Promise<void>
+  updateHotel: (id: string, data: Partial<HubHotel>) => Promise<void>
+  removeHotel: (id: string) => Promise<void>
+
+  // Things To Do
+  thingsToDo: HubThingToDo[]
+  aiSuggestions: ThingsToDoSuggestion[]
+  isLoadingAISuggestions: boolean
+  loadThingsToDo: (hubId: string) => Promise<void>
+  addThingToDo: (hubId: string, item: Omit<HubThingToDo, 'id' | 'hub_id' | 'display_order'>) => Promise<void>
+  updateThingToDo: (id: string, data: Partial<HubThingToDo>) => Promise<void>
+  removeThingToDo: (id: string) => Promise<void>
+  generateAISuggestions: (city: string, state: string, weddingDate: string) => Promise<void>
+  clearAISuggestions: () => void
+
+  // FAQ
+  faqItems: HubFaqItem[]
+  loadFaq: (hubId: string) => Promise<void>
+  addFaqItem: (hubId: string, item: Omit<HubFaqItem, 'id' | 'hub_id' | 'display_order'>) => Promise<void>
+  updateFaqItem: (id: string, data: Partial<HubFaqItem>) => Promise<void>
+  removeFaqItem: (id: string) => Promise<void>
 }
 
 export const useHubStore = create<HubState>((set, get) => ({
@@ -67,6 +100,12 @@ export const useHubStore = create<HubState>((set, get) => ({
   isLoading: false,
   isCreating: false,
   myHubs: [],
+  travel: null,
+  hotels: [],
+  thingsToDo: [],
+  aiSuggestions: [],
+  isLoadingAISuggestions: false,
+  faqItems: [],
 
   loadHub: async (accessCode) => {
     set({ isLoading: true })
@@ -85,12 +124,20 @@ export const useHubStore = create<HubState>((set, get) => ({
         { data: vendors },
         { data: songs },
         { data: seating },
+        { data: travel },
+        { data: hotels },
+        { data: thingsToDo },
+        { data: faqItems },
       ] = await Promise.all([
         supabase.from('hub_timeline_events').select('*').eq('hub_id', hub.id).order('display_order'),
         supabase.from('hub_photos').select('*').eq('hub_id', hub.id).eq('is_approved', true).order('is_featured', { ascending: false }).order('created_at', { ascending: false }).limit(40),
         supabase.from('hub_vendors').select('*').eq('hub_id', hub.id).order('display_order'),
         supabase.from('hub_song_requests').select('*').eq('hub_id', hub.id).order('vote_count', { ascending: false }),
         supabase.from('hub_seating_tables').select('*').eq('hub_id', hub.id).order('display_order'),
+        supabase.from('hub_travel').select('*').eq('hub_id', hub.id).single(),
+        supabase.from('hub_hotels').select('*').eq('hub_id', hub.id).order('display_order'),
+        supabase.from('hub_things_to_do').select('*').eq('hub_id', hub.id).order('display_order'),
+        supabase.from('hub_faq').select('*').eq('hub_id', hub.id).order('display_order'),
       ])
 
       set({
@@ -100,6 +147,10 @@ export const useHubStore = create<HubState>((set, get) => ({
         vendors: (vendors as HubVendor[]) || [],
         songRequests: (songs as HubSongRequest[]) || [],
         seatingTables: (seating as HubSeatingTable[]) || [],
+        travel: (travel as HubTravel) || null,
+        hotels: (hotels as HubHotel[]) || [],
+        thingsToDo: (thingsToDo as HubThingToDo[]) || [],
+        faqItems: (faqItems as HubFaqItem[]) || [],
         isLoading: false,
       })
     } catch {
@@ -284,5 +335,115 @@ export const useHubStore = create<HubState>((set, get) => ({
   trackScan: async (hubId, sessionId) => {
     await supabase.from('hub_scans').insert({ hub_id: hubId, session_id: sessionId })
     await supabase.rpc('increment_hub_scan', { p_hub_id: hubId })
+  },
+
+  // ── Travel ────────────────────────────────────────────────────────────────
+  loadTravel: async (hubId) => {
+    const { data: travel } = await supabase.from('hub_travel').select('*').eq('hub_id', hubId).single()
+    const { data: hotels } = await supabase.from('hub_hotels').select('*').eq('hub_id', hubId).order('display_order')
+    set({ travel: (travel as HubTravel) || null, hotels: (hotels as HubHotel[]) || [] })
+  },
+
+  saveTravel: async (hubId, data) => {
+    const existing = get().travel
+    if (existing) {
+      await supabase.from('hub_travel').update(data).eq('hub_id', hubId)
+      set({ travel: { ...existing, ...data } as HubTravel })
+    } else {
+      const { data: row, error } = await supabase
+        .from('hub_travel')
+        .insert({ hub_id: hubId, ...data })
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      set({ travel: row as HubTravel })
+    }
+  },
+
+  addHotel: async (hubId, hotel) => {
+    const order = get().hotels.length
+    const { data, error } = await supabase
+      .from('hub_hotels')
+      .insert({ hub_id: hubId, ...hotel, display_order: order })
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+    set((s) => ({ hotels: [...s.hotels, data as HubHotel] }))
+  },
+
+  updateHotel: async (id, data) => {
+    await supabase.from('hub_hotels').update(data).eq('id', id)
+    set((s) => ({ hotels: s.hotels.map((h) => h.id === id ? { ...h, ...data } : h) }))
+  },
+
+  removeHotel: async (id) => {
+    await supabase.from('hub_hotels').delete().eq('id', id)
+    set((s) => ({ hotels: s.hotels.filter((h) => h.id !== id) }))
+  },
+
+  // ── Things To Do ─────────────────────────────────────────────────────────
+  loadThingsToDo: async (hubId) => {
+    const { data } = await supabase.from('hub_things_to_do').select('*').eq('hub_id', hubId).order('display_order')
+    set({ thingsToDo: (data as HubThingToDo[]) || [] })
+  },
+
+  addThingToDo: async (hubId, item) => {
+    const order = get().thingsToDo.length
+    const { data, error } = await supabase
+      .from('hub_things_to_do')
+      .insert({ hub_id: hubId, ...item, display_order: order })
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+    set((s) => ({ thingsToDo: [...s.thingsToDo, data as HubThingToDo] }))
+  },
+
+  updateThingToDo: async (id, data) => {
+    await supabase.from('hub_things_to_do').update(data).eq('id', id)
+    set((s) => ({ thingsToDo: s.thingsToDo.map((t) => t.id === id ? { ...t, ...data } : t) }))
+  },
+
+  removeThingToDo: async (id) => {
+    await supabase.from('hub_things_to_do').delete().eq('id', id)
+    set((s) => ({ thingsToDo: s.thingsToDo.filter((t) => t.id !== id) }))
+  },
+
+  generateAISuggestions: async (city, state, weddingDate) => {
+    set({ isLoadingAISuggestions: true, aiSuggestions: [] })
+    try {
+      const suggestions = await suggestThingsToDo(city, state, weddingDate)
+      set({ aiSuggestions: suggestions, isLoadingAISuggestions: false })
+    } catch {
+      set({ isLoadingAISuggestions: false })
+    }
+  },
+
+  clearAISuggestions: () => set({ aiSuggestions: [] }),
+
+  // ── FAQ ───────────────────────────────────────────────────────────────────
+  loadFaq: async (hubId) => {
+    const { data } = await supabase.from('hub_faq').select('*').eq('hub_id', hubId).order('display_order')
+    set({ faqItems: (data as HubFaqItem[]) || [] })
+  },
+
+  addFaqItem: async (hubId, item) => {
+    const order = get().faqItems.length
+    const { data, error } = await supabase
+      .from('hub_faq')
+      .insert({ hub_id: hubId, ...item, display_order: order })
+      .select()
+      .single()
+    if (error) throw new Error(error.message)
+    set((s) => ({ faqItems: [...s.faqItems, data as HubFaqItem] }))
+  },
+
+  updateFaqItem: async (id, data) => {
+    await supabase.from('hub_faq').update(data).eq('id', id)
+    set((s) => ({ faqItems: s.faqItems.map((f) => f.id === id ? { ...f, ...data } : f) }))
+  },
+
+  removeFaqItem: async (id) => {
+    await supabase.from('hub_faq').delete().eq('id', id)
+    set((s) => ({ faqItems: s.faqItems.filter((f) => f.id !== id) }))
   },
 }))

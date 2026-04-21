@@ -5,16 +5,19 @@ import { getSessionId } from '../hooks/useHubPhotoWall'
 import { HubHero } from '../components/HubHero'
 import { HubNav } from '../components/HubNav'
 import { HubTimeline } from '../components/HubTimeline'
+import { HubTravel } from '../components/HubTravel'
+import { HubThingsToDo } from '../components/HubThingsToDo'
 import { HubPhotoWall } from '../components/HubPhotoWall'
 import { HubPhotoUpload } from '../components/HubPhotoUpload'
 import { HubSeating } from '../components/HubSeating'
 import { HubSongRequests } from '../components/HubSongRequests'
+import { HubFAQ } from '../components/HubFAQ'
 import { HubVendors } from '../components/HubVendors'
 import { HubFooter } from '../components/HubFooter'
 
 export function WeddingHubPage() {
   const { accessCode } = useParams<{ accessCode: string }>()
-  const { hub, timeline, vendors, seatingTables, isLoading, loadHub, trackScan } = useHubStore()
+  const { hub, timeline, vendors, seatingTables, travel, hotels, thingsToDo, faqItems, isLoading, loadHub, trackScan } = useHubStore()
   const [activeSection, setActiveSection] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const scanTracked = useRef(false)
@@ -33,7 +36,7 @@ export function WeddingHubPage() {
 
   // IntersectionObserver for sticky nav active state
   useEffect(() => {
-    const sections = ['timeline', 'photos', 'seating', 'songs', 'vendors']
+    const sections = ['timeline', 'travel', 'things-to-do', 'photos', 'seating', 'songs', 'faq', 'vendors']
     const observers: IntersectionObserver[] = []
 
     sections.forEach((id) => {
@@ -94,6 +97,20 @@ export function WeddingHubPage() {
         </>
       )}
 
+      {hub.show_travel && (travel || hotels.length > 0) && (
+        <>
+          <div className="h-px bg-border" />
+          <HubTravel hub={hub} travel={travel} hotels={hotels} />
+        </>
+      )}
+
+      {hub.show_things_to_do && thingsToDo.length > 0 && (
+        <>
+          <div className="h-px bg-border" />
+          <HubThingsToDo hub={hub} items={thingsToDo} />
+        </>
+      )}
+
       {hub.show_photo_wall && (
         <>
           <div className="h-px bg-border" />
@@ -112,6 +129,13 @@ export function WeddingHubPage() {
         <>
           <div className="h-px bg-border" />
           <HubSongRequests hub={hub} />
+        </>
+      )}
+
+      {hub.show_faq && faqItems.length > 0 && (
+        <>
+          <div className="h-px bg-border" />
+          <HubFAQ items={faqItems} />
         </>
       )}
 

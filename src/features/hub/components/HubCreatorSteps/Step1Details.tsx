@@ -57,9 +57,21 @@ export function Step1Details({ data, onChange }: Props) {
       </div>
 
       <div>
-        <label className="block font-body text-sm font-medium text-ink mb-1.5">Venue location</label>
-        <input {...field('venue_address')} placeholder="Austin, Texas" className="input w-full" />
+        <label className="block font-body text-sm font-medium text-ink mb-1.5">Venue address</label>
+        <input {...field('venue_address')} placeholder="123 Main St, Austin, TX 78701" className="input w-full" />
       </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block font-body text-sm font-medium text-ink mb-1.5">City</label>
+          <input {...field('venue_city')} placeholder="Austin" className="input w-full" />
+        </div>
+        <div>
+          <label className="block font-body text-sm font-medium text-ink mb-1.5">State</label>
+          <input {...field('venue_state')} placeholder="Texas" className="input w-full" />
+        </div>
+      </div>
+      <p className="font-body text-xs text-ink-300 -mt-3">City and state are used to generate activity suggestions for your guests.</p>
 
       <div>
         <label className="block font-body text-sm font-medium text-ink mb-1.5">Welcome message</label>

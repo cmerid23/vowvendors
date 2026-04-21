@@ -21,6 +21,11 @@ export interface WeddingHub {
   show_seating: boolean
   show_song_requests: boolean
   show_vendors: boolean
+  show_travel: boolean
+  show_things_to_do: boolean
+  show_faq: boolean
+  venue_city: string | null
+  venue_state: string | null
   total_scans: number
   total_guest_accounts: number
   total_photos_uploaded: number
@@ -108,6 +113,77 @@ export interface HubAnalytics {
   topVendorTaps: Array<{ vendorName: string; taps: number }>
 }
 
+export interface HubTravel {
+  id: string
+  hub_id: string
+  nearest_airport_name: string | null
+  nearest_airport_code: string | null
+  airport_distance_text: string | null
+  airport_notes: string | null
+  transport_notes: string | null
+  parking_notes: string | null
+  recommended_area: string | null
+}
+
+export interface HubHotel {
+  id: string
+  hub_id: string
+  name: string
+  address: string | null
+  distance_from_venue: string | null
+  price_range: string | null
+  booking_link: string | null
+  notes: string | null
+  display_order: number
+}
+
+export interface HubThingToDo {
+  id: string
+  hub_id: string
+  name: string
+  category: 'food' | 'outdoors' | 'shopping' | 'culture' | 'entertainment' | 'general'
+  description: string | null
+  address: string | null
+  distance_from_venue: string | null
+  website_url: string | null
+  google_maps_url: string | null
+  is_ai_generated: boolean
+  display_order: number
+}
+
+export interface HubFaqItem {
+  id: string
+  hub_id: string
+  category: string
+  question: string
+  answer: string
+  display_order: number
+  is_from_template: boolean
+}
+
+export interface FaqTemplate {
+  question: string
+  placeholder: string
+}
+
+export interface ThingsToDoSuggestion {
+  name: string
+  category: string
+  description: string
+  distance_hint: string
+}
+
+export type HubThingToDoCategory = 'food' | 'outdoors' | 'shopping' | 'culture' | 'entertainment' | 'general'
+
+export const THINGS_TO_DO_CATEGORIES: Array<{ id: HubThingToDoCategory; label: string; emoji: string }> = [
+  { id: 'food', label: 'Food & Drinks', emoji: '🍽️' },
+  { id: 'outdoors', label: 'Outdoors', emoji: '🌳' },
+  { id: 'shopping', label: 'Shopping', emoji: '🛍️' },
+  { id: 'culture', label: 'Culture', emoji: '🏛️' },
+  { id: 'entertainment', label: 'Entertainment', emoji: '🎭' },
+  { id: 'general', label: 'General', emoji: '📍' },
+]
+
 // Form types for creation
 export interface CreateHubData {
   created_by: string
@@ -117,6 +193,8 @@ export interface CreateHubData {
   wedding_date: string
   venue_name?: string
   venue_address?: string
+  venue_city?: string
+  venue_state?: string
   cover_photo_url?: string
   welcome_message?: string
   accent_color?: string
@@ -126,6 +204,9 @@ export interface CreateHubData {
   show_seating?: boolean
   show_song_requests?: boolean
   show_vendors?: boolean
+  show_travel?: boolean
+  show_things_to_do?: boolean
+  show_faq?: boolean
 }
 
 export interface CreateTimelineEvent {
