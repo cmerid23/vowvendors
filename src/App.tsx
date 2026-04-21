@@ -32,6 +32,9 @@ import VendorAvailabilityPage from './pages/vendor/VendorAvailabilityPage'
 import { VendorGalleriesPage } from './pages/vendor/VendorGalleriesPage'
 import { VendorGalleryDetailPage } from './pages/vendor/VendorGalleryDetailPage'
 import { GalleryViewPage } from './pages/public/GalleryViewPage'
+import { VendorContractsPage } from './pages/vendor/VendorContractsPage'
+import { VendorContractBuilderPage } from './pages/vendor/VendorContractBuilderPage'
+import { ContractSigningPage } from './features/contracts/pages/ContractSigningPage'
 
 export default function App() {
   return (
@@ -47,6 +50,7 @@ export default function App() {
           <Route path="/style-quiz" element={<StyleQuizPage />} />
           <Route path="/wedpose" element={<WedPoseLanding />} />
           <Route path="/gallery/:slug" element={<GalleryViewPage />} />
+          <Route path="/sign/:contractId" element={<ContractSigningPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>
@@ -77,6 +81,9 @@ export default function App() {
             <Route path="/vendor/availability" element={<VendorAvailabilityPage />} />
             <Route path="/vendor/galleries" element={<VendorGalleriesPage />} />
             <Route path="/vendor/galleries/:galleryId" element={<VendorGalleryDetailPage />} />
+            <Route path="/vendor/contracts" element={<VendorContractsPage />} />
+            <Route path="/vendor/contracts/new" element={<VendorContractBuilderPage />} />
+            <Route path="/vendor/contracts/:contractId/edit" element={<VendorContractBuilderPage />} />
             <Route path="/vendor/settings" element={<VendorSettingsPage />} />
           </Route>
         </Route>

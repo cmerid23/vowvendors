@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, User, Image, MessageSquare, Camera, CalendarDays, Settings, LogOut, Images } from 'lucide-react'
+import { LayoutDashboard, User, Image, MessageSquare, Camera, CalendarDays, Settings, LogOut, Images, FileText } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useAuthListener } from '../../hooks/useAuth'
@@ -9,6 +9,7 @@ const NAV = [
   { to: '/vendor/profile', icon: User, label: 'My Profile' },
   { to: '/vendor/portfolio', icon: Image, label: 'Portfolio' },
   { to: '/vendor/galleries', icon: Images, label: 'Galleries' },
+  { to: '/vendor/contracts', icon: FileText, label: 'Contracts' },
   { to: '/vendor/inquiries', icon: MessageSquare, label: 'Inquiries' },
   { to: '/vendor/wedpose', icon: Camera, label: 'WedPose' },
   { to: '/vendor/availability', icon: CalendarDays, label: 'Availability' },
