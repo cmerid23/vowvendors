@@ -9,7 +9,6 @@ export function useAuthListener() {
   const initialized = useRef(false)
 
   useEffect(() => {
-    // Prevent double-subscription when component re-mounts (StrictMode / layout transitions)
     if (initialized.current) return
     initialized.current = true
 
@@ -17,7 +16,6 @@ export function useAuthListener() {
       setSession(session)
       setUser(session?.user ?? null)
 
-      // Silent background events — don't re-fetch profile or flash loading state
       if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'MFA_CHALLENGE_VERIFIED') {
         return
       }
@@ -28,28 +26,29 @@ export function useAuthListener() {
         return
       }
 
-      // INITIAL_SESSION, SIGNED_IN, PASSWORD_RECOVERY
       if (session?.user) {
         const { data } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single()
-        setProfile(data)
-        if (event === 'SIGNED_IN') {
-          await syncToDb(session.user.id)
-          await loadFromDb(session.user.id)
-        }
+        setProfile(data ?? null)
       } else {
         setProfile(null)
       }
 
+      // Unblock navigation before favorites sync
       setLoading(false)
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        syncToDb(session.user.id).catch(() => {})
+        loadFromDb(session.user.id).catch(() => {})
+      }
     })
 
     return () => {
       initialized.current = false
       subscription.unsubscribe()
     }
-  }, []) // stable refs — Zustand setters never change
+  }, [])
 }

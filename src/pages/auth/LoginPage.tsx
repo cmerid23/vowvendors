@@ -10,16 +10,16 @@ import { loginSchema, type LoginFormData } from '../../utils/validators'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { user, profile } = useAuthStore()
+  const { user, profile, isLoading } = useAuthStore()
   const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   })
 
   useEffect(() => {
-    if (user && profile) {
-      navigate(profile.role === 'vendor' ? '/vendor/overview' : '/dashboard')
+    if (user && !isLoading) {
+      navigate(profile?.role === 'vendor' ? '/vendor/overview' : '/dashboard')
     }
-  }, [user, profile, navigate])
+  }, [user, profile, isLoading, navigate])
 
   const onSubmit = async (data: LoginFormData) => {
     const { error } = await supabase.auth.signInWithPassword(data)
