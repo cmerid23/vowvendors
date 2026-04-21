@@ -7,19 +7,21 @@ import { Button } from '../../components/ui/Button'
 
 export function VendorPortfolioPage() {
   const profile = useAuthStore((s) => s.profile)
+  const authLoading = useAuthStore((s) => s.isLoading)
   const [vendorId, setVendorId] = useState<string | null>(null)
   const [images, setImages] = useState<PortfolioImage[]>([])
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    if (authLoading) return
     if (!profile) return
     supabase.from('vendors').select('id').eq('user_id', profile.id).single().then(({ data: v }) => {
       if (!v) return
       setVendorId(v.id)
       supabase.from('portfolio_images').select('*').eq('vendor_id', v.id).order('display_order').then(({ data }) => setImages(data || []))
     })
-  }, [profile])
+  }, [profile, authLoading])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

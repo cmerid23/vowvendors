@@ -9,13 +9,15 @@ import type { Gallery } from '../../types/gallery'
 
 export function VendorGalleriesPage() {
   const profile = useAuthStore((s) => s.profile)
+  const authLoading = useAuthStore((s) => s.isLoading)
   const [vendorId, setVendorId] = useState<string | null>(null)
   const [galleries, setGalleries] = useState<Gallery[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => {
-    if (!profile) return
+    if (authLoading) return
+    if (!profile) { setLoading(false); return }
     supabase
       .from('vendors')
       .select('id')
@@ -34,7 +36,7 @@ export function VendorGalleriesPage() {
             setLoading(false)
           })
       })
-  }, [profile])
+  }, [profile, authLoading])
 
   const handleCreated = (gallery: Gallery) => {
     setGalleries((prev) => [gallery, ...prev])
