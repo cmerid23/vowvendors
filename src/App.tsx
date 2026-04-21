@@ -44,6 +44,7 @@ import { ContractSigningPage } from './features/contracts/pages/ContractSigningP
 import { WeddingHubPage } from './features/hub/pages/WeddingHubPage'
 import { HubCreator } from './features/hub/pages/HubCreator'
 import { HubDashboard } from './features/hub/pages/HubDashboard'
+import { VendorHubsPage } from './features/hub/pages/VendorHubsPage'
 
 export default function App() {
   return (
@@ -95,6 +96,7 @@ export default function App() {
             <Route path="/vendor/contracts" element={<VendorContractsPage />} />
             <Route path="/vendor/contracts/new" element={<VendorContractBuilderPage />} />
             <Route path="/vendor/contracts/:contractId/edit" element={<VendorContractBuilderPage />} />
+            <Route path="/vendor/hub" element={<VendorHubsPage />} />
             <Route path="/vendor/hub/new" element={<HubCreator />} />
             <Route path="/vendor/hub/:hubId" element={<HubDashboard />} />
             <Route path="/vendor/settings" element={<VendorSettingsPage />} />

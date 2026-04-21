@@ -9,7 +9,7 @@ const NAV = [
   { to: '/vendor/portfolio', icon: Image, label: 'Portfolio' },
   { to: '/vendor/galleries', icon: Images, label: 'Galleries' },
   { to: '/vendor/contracts', icon: FileText, label: 'Contracts' },
-  { to: '/vendor/hub/new', icon: QrCode, label: 'Wedding Hub' },
+  { to: '/vendor/hub', icon: QrCode, label: 'Wedding Hub' },
   { to: '/vendor/inquiries', icon: MessageSquare, label: 'Inquiries' },
   { to: '/vendor/wedpose', icon: Camera, label: 'WedPose' },
   { to: '/vendor/availability', icon: CalendarDays, label: 'Availability' },
