@@ -11,6 +11,11 @@ import { JoinPage } from './pages/public/JoinPage'
 import { AboutPage } from './pages/public/AboutPage'
 import { BudgetMatcherPage } from './pages/public/BudgetMatcherPage'
 import { StyleQuizPage } from './pages/public/StyleQuizPage'
+import { WedPoseLanding } from './pages/public/WedPoseLanding'
+import { PublicWedPoseHome } from './pages/public/wedpose/PublicWedPoseHome'
+import { PublicWedPoseCategory } from './pages/public/wedpose/PublicWedPoseCategory'
+import { WedPoseShotList } from './pages/public/wedpose/WedPoseShotList'
+import { WedPoseLayout } from './features/wedpose/components/layout/WedPoseLayout'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { CustomerFavoritesPage } from './pages/customer/CustomerFavoritesPage'
@@ -37,8 +42,16 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/budget-matcher" element={<BudgetMatcherPage />} />
           <Route path="/style-quiz" element={<StyleQuizPage />} />
+          <Route path="/wedpose" element={<WedPoseLanding />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+        </Route>
+
+        {/* Public WedPose browsing — own dark layout, no AppShell */}
+        <Route element={<WedPoseLayout />}>
+          <Route path="/wedpose/poses" element={<PublicWedPoseHome />} />
+          <Route path="/wedpose/poses/:categoryId" element={<PublicWedPoseCategory />} />
+          <Route path="/wedpose/shot-list" element={<WedPoseShotList />} />
         </Route>
 
         <Route element={<AuthGuard />}>

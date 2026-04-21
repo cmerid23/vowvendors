@@ -21,6 +21,10 @@ interface WedPoseState {
   recentlyViewed: PoseCard[]
   addRecentlyViewed: (pose: PoseCard) => void
   clearRecentlyViewed: () => void
+
+  // Tracks the pose a guest tried to heart — triggers the save prompt
+  pendingFavoritePose: PoseCard | null
+  setPendingFavoritePose: (pose: PoseCard | null) => void
 }
 
 export const useWedPoseStore = create<WedPoseState>()(
@@ -84,6 +88,9 @@ export const useWedPoseStore = create<WedPoseState>()(
         })),
 
       recentlyViewed: [],
+
+      pendingFavoritePose: null,
+      setPendingFavoritePose: (pose) => set({ pendingFavoritePose: pose }),
 
       addRecentlyViewed: (pose) =>
         set((state) => {

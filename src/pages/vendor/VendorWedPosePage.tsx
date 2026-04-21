@@ -52,6 +52,16 @@ export function VendorWedPosePage() {
 
   return (
     <div className="wedpose-embedded">
+      <div className="flex justify-end mb-2">
+        <a
+          href="/wedpose"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-body text-xs text-cream-400 hover:text-gold transition-colors underline"
+        >
+          Share WedPose with other photographers ↗
+        </a>
+      </div>
       <Routes>
         <Route index element={<WedPoseHome />} />
         <Route path="category/:categoryId" element={<WedPoseCategory />} />

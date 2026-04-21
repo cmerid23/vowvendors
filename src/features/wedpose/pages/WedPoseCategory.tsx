@@ -59,7 +59,11 @@ function SubcategoryView({
   )
 }
 
-export function WedPoseCategory() {
+interface WedPoseCategoryProps {
+  basePath?: string
+}
+
+export function WedPoseCategory({ basePath = '/vendor/wedpose' }: WedPoseCategoryProps) {
   const { categoryId } = useParams<{ categoryId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -73,7 +77,7 @@ export function WedPoseCategory() {
     return (
       <div className="pt-8 text-center">
         <p className="text-cream-400">Category not found.</p>
-        <button onClick={() => navigate('/vendor/wedpose')} className="wp-btn-gold mt-4">Go Home</button>
+        <button onClick={() => navigate(basePath)} className="wp-btn-gold mt-4">Go Home</button>
       </div>
     )
   }
@@ -95,7 +99,7 @@ export function WedPoseCategory() {
   return (
     <div className="pt-2 animate-fade-in">
       <div className="mb-6">
-        <button onClick={() => navigate('/vendor/wedpose')} className="text-gold text-sm font-body hover:underline mb-3 flex items-center gap-1">
+        <button onClick={() => navigate(basePath)} className="text-gold text-sm font-body hover:underline mb-3 flex items-center gap-1">
           ← Back
         </button>
         <div className="flex items-center gap-3">

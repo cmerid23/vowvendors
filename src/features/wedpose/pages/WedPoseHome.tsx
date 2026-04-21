@@ -6,7 +6,11 @@ import { PoseCard } from '../components/pose/PoseCard'
 import { PoseModal } from '../components/pose/PoseModal'
 import type { PoseCard as PoseCardType } from '../types'
 
-export function WedPoseHome() {
+interface WedPoseHomeProps {
+  basePath?: string
+}
+
+export function WedPoseHome({ basePath = '/vendor/wedpose' }: WedPoseHomeProps) {
   const navigate = useNavigate()
   const recentlyViewed = useWedPoseStore((s) => s.recentlyViewed)
   const favorites = useWedPoseStore((s) => s.favorites)
@@ -26,7 +30,7 @@ export function WedPoseHome() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      navigate(`/vendor/wedpose/search?q=${encodeURIComponent(searchQuery.trim())}`)
+      navigate(`${basePath}/search?q=${encodeURIComponent(searchQuery.trim())}`)
     }
   }
 
@@ -70,7 +74,7 @@ export function WedPoseHome() {
           {filteredCategories.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => navigate(`/vendor/wedpose/category/${cat.id}`)}
+              onClick={() => navigate(`${basePath}/category/${cat.id}`)}
               className="bg-charcoal-50 hover:bg-charcoal-100 border border-gold/10 hover:border-gold/40 rounded-xl p-4 text-left transition-all duration-200 wp-card-hover group"
             >
               <span className="text-2xl mb-2 block">{cat.icon}</span>
@@ -95,7 +99,7 @@ export function WedPoseHome() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-lg text-cream">Recently Viewed</h2>
             <button
-              onClick={() => navigate('/vendor/wedpose/favorites')}
+              onClick={() => navigate(`${basePath}/favorites`)}
               className="text-gold text-xs font-body hover:underline"
             >
               See all →
@@ -114,7 +118,7 @@ export function WedPoseHome() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-lg text-cream">Favorites</h2>
             <button
-              onClick={() => navigate('/vendor/wedpose/favorites')}
+              onClick={() => navigate(`${basePath}/favorites`)}
               className="text-gold text-xs font-body hover:underline"
             >
               View all {favorites.length} →
