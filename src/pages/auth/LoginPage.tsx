@@ -1,29 +1,31 @@
-import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { supabase } from '../../lib/supabase'
-import { useAuthStore } from '../../store/useAuthStore'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
 import { loginSchema, type LoginFormData } from '../../utils/validators'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { user, profile, isLoading } = useAuthStore()
   const { register, handleSubmit, setError, formState: { errors, isSubmitting } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   })
 
-  useEffect(() => {
-    if (user && !isLoading) {
-      navigate(profile?.role === 'vendor' ? '/vendor/overview' : '/dashboard')
-    }
-  }, [user, profile, isLoading, navigate])
-
   const onSubmit = async (data: LoginFormData) => {
-    const { error } = await supabase.auth.signInWithPassword(data)
-    if (error) setError('root', { message: error.message })
+    const { data: result, error } = await supabase.auth.signInWithPassword(data)
+    if (error) {
+      setError('root', { message: error.message })
+      return
+    }
+    if (result.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', result.user.id)
+        .single()
+      navigate(profile?.role === 'vendor' ? '/vendor/overview' : '/dashboard', { replace: true })
+    }
   }
 
   const handleGoogle = () => {
