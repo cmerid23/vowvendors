@@ -30,6 +30,7 @@ export function Navbar() {
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-2">
           <Link to="/search" className="btn-ghost text-sm">Find Vendors</Link>
+          <Link to="/wedpose" className="btn-ghost text-sm flex items-center gap-1">📷 WedPose</Link>
           <Link to="/about" className="btn-ghost text-sm">About</Link>
           {user ? (
             <>
@@ -63,6 +64,9 @@ export function Navbar() {
         <div className="sm:hidden bg-white border-t border-border px-4 py-3 space-y-1 animate-slide-up">
           <Link to="/search" onClick={() => setMenuOpen(false)} className="sidebar-link">
             <Search size={16} /> Find Vendors
+          </Link>
+          <Link to="/wedpose" onClick={() => setMenuOpen(false)} className="sidebar-link">
+            📷 WedPose
           </Link>
           <Link to="/about" onClick={() => setMenuOpen(false)} className="sidebar-link">About</Link>
           {user ? (

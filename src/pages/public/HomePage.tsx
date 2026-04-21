@@ -136,6 +136,28 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* WedPose promo band */}
+      <section className="bg-ink py-12 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-6 sm:gap-10">
+          <div className="text-center sm:text-left flex-1">
+            <p className="text-brand font-body text-xs font-semibold uppercase tracking-widest mb-2">Free Tool for Photographers</p>
+            <h2 className="font-display text-3xl sm:text-4xl text-white font-semibold mb-2">WedPose</h2>
+            <p className="font-body text-ink-300 text-base leading-relaxed">
+              600+ wedding pose references with photographer tips and camera settings. Open it on location — no subscription, no login required.
+            </p>
+          </div>
+          <div className="shrink-0 flex flex-col items-center gap-3">
+            <button
+              onClick={() => navigate('/wedpose')}
+              className="flex items-center gap-2 bg-brand text-white font-body font-semibold text-sm px-7 py-3 rounded-xl hover:bg-brand/90 transition-colors"
+            >
+              📷 Open WedPose <ArrowRight size={14} />
+            </button>
+            <p className="font-body text-ink-400 text-xs">Free forever · No account needed</p>
+          </div>
+        </div>
+      </section>
+
       {/* Lead capture CTA */}
       <section className="bg-ink text-white py-20 px-4 sm:px-6">
         <div className="max-w-2xl mx-auto text-center">
