@@ -1,41 +1,79 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { ExternalLink, Copy, Eye, EyeOff, CheckCircle } from 'lucide-react'
-import { useHubStore } from '../../../store/useHubStore'
+import { ExternalLink, Copy, EyeOff, Eye, CheckCircle } from 'lucide-react'
+import { supabase } from '../../../lib/supabase'
 import { HubQRCode } from '../components/HubQRCode'
 import { HubAnalytics } from '../components/HubAnalytics'
-import { supabase } from '../../../lib/supabase'
-import type { HubPhoto } from '../../../types/hub'
+import type { WeddingHub, HubPhoto, HubSongRequest } from '../../../types/hub'
 
 type Tab = 'overview' | 'photos' | 'songs' | 'qr'
 
 export function HubDashboard() {
   const { hubId } = useParams<{ hubId: string }>()
-  const { hub, songRequests, loadHub, hidePhoto, featurePhoto, approvePhoto, markSongPlayed, updateHub } = useHubStore()
+  const [hub, setHub] = useState<WeddingHub | null>(null)
+  const [photos, setPhotos] = useState<HubPhoto[]>([])
+  const [songs, setSongs] = useState<HubSongRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [tab, setTab] = useState<Tab>('overview')
   const [copied, setCopied] = useState(false)
-  const [allPhotos, setAllPhotos] = useState<HubPhoto[]>([])
 
   useEffect(() => {
     if (!hubId) return
-    // Load by ID: first get access_code then load
-    supabase.from('wedding_hubs').select('access_code').eq('id', hubId).single().then(({ data }) => {
-      if (data) loadHub(data.access_code)
-    })
-  }, [hubId, loadHub])
+    setLoading(true)
 
-  useEffect(() => {
-    if (!hubId) return
-    // Load all photos including unapproved for moderation
-    supabase.from('hub_photos').select('*').eq('hub_id', hubId).order('created_at', { ascending: false }).then(({ data }) => {
-      setAllPhotos((data as HubPhoto[]) || [])
+    Promise.all([
+      supabase.from('wedding_hubs').select('*').eq('id', hubId).single(),
+      supabase.from('hub_photos').select('*').eq('hub_id', hubId).order('created_at', { ascending: false }),
+      supabase.from('hub_song_requests').select('*').eq('hub_id', hubId).order('vote_count', { ascending: false }),
+    ]).then(([hubRes, photosRes, songsRes]) => {
+      if (hubRes.error) { setError(hubRes.error.message); setLoading(false); return }
+      setHub(hubRes.data as WeddingHub)
+      setPhotos((photosRes.data as HubPhoto[]) || [])
+      setSongs((songsRes.data as HubSongRequest[]) || [])
+      setLoading(false)
     })
   }, [hubId])
 
-  if (!hub) {
+  const toggleActive = async () => {
+    if (!hub) return
+    const next = !hub.is_active
+    await supabase.from('wedding_hubs').update({ is_active: next }).eq('id', hub.id)
+    setHub({ ...hub, is_active: next })
+  }
+
+  const hidePhoto = async (photoId: string) => {
+    await supabase.from('hub_photos').update({ is_approved: false }).eq('id', photoId)
+    setPhotos((prev) => prev.map((p) => p.id === photoId ? { ...p, is_approved: false } : p))
+  }
+
+  const approvePhoto = async (photoId: string) => {
+    await supabase.from('hub_photos').update({ is_approved: true }).eq('id', photoId)
+    setPhotos((prev) => prev.map((p) => p.id === photoId ? { ...p, is_approved: true } : p))
+  }
+
+  const featurePhoto = async (photoId: string, featured: boolean) => {
+    await supabase.from('hub_photos').update({ is_featured: featured }).eq('id', photoId)
+    setPhotos((prev) => prev.map((p) => p.id === photoId ? { ...p, is_featured: featured } : p))
+  }
+
+  const markPlayed = async (songId: string) => {
+    await supabase.from('hub_song_requests').update({ is_played: true }).eq('id', songId)
+    setSongs((prev) => prev.map((s) => s.id === songId ? { ...s, is_played: true } : s))
+  }
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (error || !hub) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="font-body text-sm text-red-500">{error || 'Hub not found'}</p>
       </div>
     )
   }
@@ -51,15 +89,15 @@ export function HubDashboard() {
 
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: 'overview', label: 'Overview' },
-    { id: 'photos', label: `Photos (${allPhotos.length})` },
-    { id: 'songs', label: `Songs (${songRequests.length})` },
+    { id: 'photos', label: `Photos (${photos.length})` },
+    { id: 'songs', label: `Songs (${songs.length})` },
     { id: 'qr', label: 'QR Code' },
   ]
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold text-ink">{coupleNames}</h1>
           <p className="font-body text-sm text-ink-400 mt-0.5">
@@ -67,11 +105,11 @@ export function HubDashboard() {
             {hub.venue_name ? ` · ${hub.venue_name}` : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => updateHub(hub.id, { is_active: !hub.is_active })}
+            onClick={toggleActive}
             className={`text-xs font-body px-3 py-1.5 rounded-full border font-medium transition-all ${
-              hub.is_active ? 'border-green-200 text-green-700 bg-green-50' : 'border-border text-ink-400'
+              hub.is_active ? 'border-green-200 text-green-700 bg-green-50' : 'border-border text-ink-400 hover:bg-ink-50'
             }`}
           >
             {hub.is_active ? 'Active' : 'Inactive'}
@@ -88,22 +126,19 @@ export function HubDashboard() {
           <p className="font-body text-xs text-ink-400 mb-0.5">Hub link</p>
           <p className="font-body text-sm text-ink truncate">{hubUrl}</p>
         </div>
-        <button
-          onClick={copyLink}
-          className="flex items-center gap-1.5 text-sm font-body font-medium text-brand hover:text-brand/80 shrink-0"
-        >
+        <button onClick={copyLink} className="flex items-center gap-1.5 text-sm font-body font-medium text-brand hover:text-brand/80 shrink-0">
           {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border">
+      <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-none">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2.5 font-body text-sm font-medium border-b-2 -mb-px transition-colors ${
+            className={`px-4 py-2.5 font-body text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
               tab === t.id ? 'border-brand text-brand' : 'border-transparent text-ink-400 hover:text-ink'
             }`}
           >
@@ -112,24 +147,22 @@ export function HubDashboard() {
         ))}
       </div>
 
-      {/* Tab content */}
-      {tab === 'overview' && (
-        <HubAnalytics hubId={hub.id} />
-      )}
+      {/* Overview */}
+      {tab === 'overview' && <HubAnalytics hubId={hub.id} />}
 
+      {/* Photos */}
       {tab === 'photos' && (
         <div className="space-y-3">
           <p className="font-body text-sm text-ink-400">
             Manage guest-uploaded photos. Hide inappropriate content or feature your favourites at the top.
           </p>
-          {allPhotos.length === 0 ? (
+          {photos.length === 0 ? (
             <p className="font-body text-sm text-ink-300 text-center py-8">No photos yet — share your hub link with guests!</p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {allPhotos.map((photo) => {
-                const url = photo.r2_thumbnail_key
-                  ? `${import.meta.env.VITE_CLOUDFLARE_R2_PUBLIC_URL || ''}/${photo.r2_thumbnail_key}`
-                  : `${import.meta.env.VITE_CLOUDFLARE_R2_PUBLIC_URL || ''}/${photo.r2_original_key}`
+              {photos.map((photo) => {
+                const r2Base = import.meta.env.VITE_CLOUDFLARE_R2_PUBLIC_URL || ''
+                const url = `${r2Base}/${photo.r2_thumbnail_key || photo.r2_original_key}`
                 return (
                   <div key={photo.id} className="relative group aspect-square bg-ink-100 rounded-lg overflow-hidden">
                     <img src={url} alt="" className="w-full h-full object-cover" />
@@ -153,7 +186,6 @@ export function HubDashboard() {
                       )}
                       <button
                         onClick={() => featurePhoto(photo.id, !photo.is_featured)}
-                        title={photo.is_featured ? 'Unfeature' : 'Feature'}
                         className={`rounded p-1 text-xs ${photo.is_featured ? 'bg-brand text-white' : 'bg-white/90'}`}
                       >
                         ★
@@ -170,13 +202,14 @@ export function HubDashboard() {
         </div>
       )}
 
+      {/* Songs */}
       {tab === 'songs' && (
         <div className="space-y-3">
-          {songRequests.length === 0 ? (
+          {songs.length === 0 ? (
             <p className="font-body text-sm text-ink-300 text-center py-8">No song requests yet.</p>
           ) : (
-            songRequests.map((req) => (
-              <div key={req.id} className={`flex items-center gap-3 p-3 rounded-xl border ${req.is_played ? 'border-border opacity-50' : 'border-border'}`}>
+            songs.map((req) => (
+              <div key={req.id} className={`flex items-center gap-3 p-3 rounded-xl border border-border ${req.is_played ? 'opacity-50' : ''}`}>
                 <div className="flex-1 min-w-0">
                   <p className={`font-body text-sm font-medium text-ink ${req.is_played ? 'line-through' : ''}`}>
                     {req.song_title}
@@ -187,7 +220,7 @@ export function HubDashboard() {
                 <span className="font-body text-sm font-medium text-brand shrink-0">▲ {req.vote_count}</span>
                 {!req.is_played && (
                   <button
-                    onClick={() => markSongPlayed(req.id)}
+                    onClick={() => markPlayed(req.id)}
                     className="text-xs font-body text-ink-400 hover:text-ink border border-border rounded-full px-2 py-0.5 shrink-0"
                   >
                     Mark played
@@ -199,6 +232,7 @@ export function HubDashboard() {
         </div>
       )}
 
+      {/* QR Code */}
       {tab === 'qr' && (
         <div className="flex flex-col items-center py-4">
           <HubQRCode
