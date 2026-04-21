@@ -29,6 +29,9 @@ import { VendorChatPage } from './pages/vendor/VendorChatPage'
 import { VendorWedPosePage } from './pages/vendor/VendorWedPosePage'
 import { VendorSettingsPage } from './pages/vendor/VendorSettingsPage'
 import VendorAvailabilityPage from './pages/vendor/VendorAvailabilityPage'
+import { VendorGalleriesPage } from './pages/vendor/VendorGalleriesPage'
+import { VendorGalleryDetailPage } from './pages/vendor/VendorGalleryDetailPage'
+import { GalleryViewPage } from './pages/public/GalleryViewPage'
 
 export default function App() {
   return (
@@ -43,6 +46,7 @@ export default function App() {
           <Route path="/budget-matcher" element={<BudgetMatcherPage />} />
           <Route path="/style-quiz" element={<StyleQuizPage />} />
           <Route path="/wedpose" element={<WedPoseLanding />} />
+          <Route path="/gallery/:slug" element={<GalleryViewPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
         </Route>
@@ -71,6 +75,8 @@ export default function App() {
             <Route path="/vendor/chat/:conversationId" element={<VendorChatPage />} />
             <Route path="/vendor/wedpose/*" element={<VendorWedPosePage />} />
             <Route path="/vendor/availability" element={<VendorAvailabilityPage />} />
+            <Route path="/vendor/galleries" element={<VendorGalleriesPage />} />
+            <Route path="/vendor/galleries/:galleryId" element={<VendorGalleryDetailPage />} />
             <Route path="/vendor/settings" element={<VendorSettingsPage />} />
           </Route>
         </Route>
