@@ -2,7 +2,6 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, User, Image, MessageSquare, Camera, CalendarDays, Settings, LogOut, Images, FileText, QrCode } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/useAuthStore'
-import { useAuthListener } from '../../hooks/useAuth'
 
 const NAV = [
   { to: '/vendor/overview', icon: LayoutDashboard, label: 'Overview' },
@@ -18,14 +17,13 @@ const NAV = [
 ]
 
 export function VendorLayout() {
-  useAuthListener()
   const navigate = useNavigate()
   const reset = useAuthStore((s) => s.reset)
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
     reset()
     navigate('/')
-    supabase.auth.signOut().catch(() => {})
   }
 
   return (

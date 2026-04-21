@@ -3,6 +3,12 @@ import { AppShell } from './components/layout/AppShell'
 import { VendorLayout } from './components/layout/VendorLayout'
 import { CustomerLayout } from './components/layout/CustomerLayout'
 import { AuthGuard, VendorGuard } from './components/auth/AuthGuard'
+import { useAuthListener } from './hooks/useAuth'
+
+function AuthInit() {
+  useAuthListener()
+  return null
+}
 
 import { HomePage } from './pages/public/HomePage'
 import { SearchPage } from './pages/public/SearchPage'
@@ -42,6 +48,7 @@ import { HubDashboard } from './features/hub/pages/HubDashboard'
 export default function App() {
   return (
     <BrowserRouter>
+      <AuthInit />
       <Routes>
         <Route element={<AppShell />}>
           <Route path="/" element={<HomePage />} />

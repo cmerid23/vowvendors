@@ -2,10 +2,8 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
-import { useAuthListener } from '../../hooks/useAuth'
 
 export function AppShell() {
-  useAuthListener()
   const location = useLocation()
 
   return (

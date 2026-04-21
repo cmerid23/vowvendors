@@ -13,10 +13,10 @@ export function CustomerLayout() {
   const navigate = useNavigate()
   const reset = useAuthStore((s) => s.reset)
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
     reset()
     navigate('/')
-    supabase.auth.signOut().catch(() => {})
   }
 
   return (
